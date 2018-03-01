@@ -62,8 +62,6 @@ public class DataGathering : MonoBehaviour {
 		//to the keyword that has been asked for fx if it contains heartRateAvg.
         string data = e.Data.ToString();
 
-        Debug.Log(data);
-
 		if (data.Contains ("heartRate")) 
 		{ 
 			string str;
