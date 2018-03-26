@@ -8,18 +8,24 @@ public class UIHandler : MonoBehaviour {
     public string ID;
     public GameObject IDWarning, b1G, b2G, input;
     public ExcelStore data;
+    public ReceiveLiveStream rls;
     public GameObject red, green;
     public RestartData RD;
-    public Button b1, b2;
+    public Button b1, b2,b3;
+
+    public Image calibrationImage;
 
     public void Start()
     {
         RD = GetComponent<RestartData>();   
+        rls =  GameObject.FindGameObjectWithTag("Data").GetComponent<ReceiveLiveStream>();
+       
     }
 
     public void SetID()
     {
         data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
+        
 
 ;       if (IDInput.text != PlayerPrefs.GetString("ID"))
         {
@@ -28,6 +34,7 @@ public class UIHandler : MonoBehaviour {
             data.ID = IDInput.text;
             ID = IDInput.text;
             IDWarning.SetActive(false);
+            print("make participant");
         }
         else
         {
@@ -65,9 +72,24 @@ public class UIHandler : MonoBehaviour {
         b2.interactable = false;
     }
 
+    public void Calibrate()
+    {
+        rls.StartCalibration();
+        calibrationImage.gameObject.SetActive(true);
+        CalibrationSucceful();
+    }
+
+    public void CalibrationSucceful()
+    {
+        b3.GetComponentInChildren<Text>().text = "Calibration Complete";
+        b3.interactable = false;
+    }
+
     IEnumerator RestartData()
     {
         yield return new WaitForSeconds(2f);
         RD.DestroyData();
     }
+
+    
 }
