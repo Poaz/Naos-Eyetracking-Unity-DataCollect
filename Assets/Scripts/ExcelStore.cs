@@ -15,13 +15,11 @@ public class ExcelStore : MonoBehaviour
 
     //Data Variables
     public string ID, testType;
-    public List<double>  gdlX,gdlY,gdlZ,gdrX,gdrY,gdrZ,pdl,pdr,  HR, HRAVG, HRMAX, GSR;
+    public List<double>  gdlX,gdlY,gdlZ,gdrX,gdrY,gdrZ,pdl,pdr, HR, GSR;
     public List<String> timeStamp;
 
     public List<string> data;
-
     public DataGathering naos;
-
     public ReceiveLiveStream eyeData;
 
   //  StreamWriter streamWriter ;
@@ -29,26 +27,19 @@ public class ExcelStore : MonoBehaviour
     void Start()
     {
         filePath = string.Concat(Application.dataPath, "/data/");
-
-
         naos = GetComponent<DataGathering>();
         eyeData = GetComponent<ReceiveLiveStream>();
     }
 
 	public void FixedUpdate(){
 		if (naos.GetConnection() && running)
-		{
-            
+		{           
 			HR.Add(naos.GetHeartRate());
-			HRAVG.Add(naos.GetAvgHeartRate());
-			HRMAX.Add(naos.GetMaxHeartRate());
 			GSR.Add(naos.GetGsr());
 			timeStamp.Add(DateTime.Now.ToLongTimeString());
 		}
 
-        if(eyeData != null){
-
-            
+        if(eyeData != null){            
             gdlX.Add(eyeData.GetGDLX());
             gdlY.Add(eyeData.GetGDLY());
             gdlZ.Add(eyeData.GetGDLZ());
@@ -58,7 +49,6 @@ public class ExcelStore : MonoBehaviour
             pdl.Add(eyeData.GetPDL());
             pdr.Add(eyeData.GetPDR());
         }
-
 	}
 
     private void Write(string fileName)
@@ -69,8 +59,7 @@ public class ExcelStore : MonoBehaviour
         }
 
 		string[] lines = new string[gdlX.Count];
-
-        string headers= "GDLX, GDLY,GDLZ, GDRX, GDRY, GDRZ, PL, PR, HR, HRAVG, GSR";
+        string headers= "GDLX, GDLY,GDLZ, GDRX, GDRY, GDRZ, PL, PR, HR, GSR";
 
       // using ( StreamWriter streamWriter = new StreamWriter(filePath + fileName + ".txt") ){
 
@@ -81,17 +70,12 @@ public class ExcelStore : MonoBehaviour
             //ID + "," + timeStamp [i] + ","  + 
 			//lines [i] = gdlX[i].ToString() + ","+ gdlY[i].ToString() +","+ gdlZ[i].ToString() +","+ gdrX[i].ToString() +","+ gdrY[i].ToString() +","+ gdrZ[i].ToString() +","+ pdl[i].ToString() +","+ pdr[i].ToString();
             // + HR[i].ToString() + "," + HRAVG[i].ToString() + "," + HRMAX[i].ToString() + "," + GSR[i].ToString(); //naos
-
-             
-			lines [i] =  gdlX[i].ToString() + ","+ gdlY[i].ToString() +","+ gdlZ[i].ToString() +","+ gdrX[i].ToString() +","+ gdrY[i].ToString() +","+ gdrZ[i].ToString() +","+ pdl[i].ToString() +","+ pdr[i].ToString()+ "," + HR[i].ToString() + "," + HRAVG[i].ToString() + "," + GSR[i].ToString();
-            // //naos
-            
-            
+           
+			lines [i] =  gdlX[i].ToString() + ","+ gdlY[i].ToString() +","+ gdlZ[i].ToString() +","+ gdrX[i].ToString() +","+ gdrY[i].ToString() +","+ gdrZ[i].ToString() +","+ pdl[i].ToString() +","+ pdr[i].ToString()+ "," + HR[i].ToString() + "," + GSR[i].ToString();
+                   
           //  streamWriter.WriteLine(lines[i]);
         }
-       
-
-		
+       	
         File.WriteAllLines(filePath + fileName + ".txt", lines);
 		Reset();
         lines = null;
@@ -121,8 +105,6 @@ public class ExcelStore : MonoBehaviour
         pdl = null;
         pdr = null;
 		HR = null;
-		HRAVG = null;
-		HRMAX = null;
 		GSR = null;
 		fileName = null;
 		ID = null;
@@ -141,8 +123,6 @@ public class ExcelStore : MonoBehaviour
         pdl = new List<double>();
         pdr = new List<double>();
         HR = new List<double>();
-        HRAVG = new List<double>();
-        HRMAX = new List<double>();
         GSR = new List<double>();
         filePath = string.Concat(Application.dataPath, "/data/");
         naos = this.GetComponent<DataGathering>();
