@@ -13,13 +13,24 @@ public class UIHandler : MonoBehaviour {
     public RestartData RD;
     public Button b1, b2,b3;
 
-    public Image calibrationImage;
+    public Slider slider;
+
+    public Image calibrationImage, knob;
 
     public void Start()
     {
         RD = GetComponent<RestartData>();   
         rls =  GameObject.FindGameObjectWithTag("Data").GetComponent<ReceiveLiveStream>();
+        //data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
+        slider.maxValue = (float) data.BaseLineTime;
+        
+
+        
        
+    }
+    void Update()
+    {
+        slider.value = data.loading;
     }
 
     public void SetID()
@@ -27,7 +38,7 @@ public class UIHandler : MonoBehaviour {
         data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
         
 
-;       if (IDInput.text != PlayerPrefs.GetString("ID"))
+       if (IDInput.text != PlayerPrefs.GetString("ID"))
         {
             PlayerPrefs.SetString("ID", IDInput.text);
             PlayerPrefs.Save();
@@ -48,6 +59,7 @@ public class UIHandler : MonoBehaviour {
         } else
         {
             b1.interactable = true;
+            b3.interactable = true;
         }
     }
 
@@ -89,6 +101,20 @@ public class UIHandler : MonoBehaviour {
     {
         yield return new WaitForSeconds(2f);
         RD.DestroyData();
+    }
+
+    public void RecordBaseline()
+    {
+        data.ObtainBaseline();
+        knob.color = Color.white;
+        b3.GetComponentInChildren<Text>().text = "Keep hand on mouse";
+        b3.interactable = false;
+
+    }
+
+    public void BaseLineObtained()
+    {
+        knob.color = Color.green;
     }
 
     
