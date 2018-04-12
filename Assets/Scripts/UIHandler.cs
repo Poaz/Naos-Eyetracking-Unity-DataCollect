@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,8 +13,11 @@ public class UIHandler : MonoBehaviour {
     public GameObject red, green;
     public RestartData RD;
     public Button b1, b2,b3;
+    public float conationValue;
+    public Text conationTextValue;
 
-    public Slider slider;
+    public Slider slider, conationSlider;
+
 
     public Image calibrationImage, knob;
 
@@ -23,10 +27,6 @@ public class UIHandler : MonoBehaviour {
         rls =  GameObject.FindGameObjectWithTag("Data").GetComponent<ReceiveLiveStream>();
         //data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
         slider.maxValue = (float) data.BaseLineTime;
-        
-
-        
-       
     }
     void Update()
     {
@@ -75,6 +75,7 @@ public class UIHandler : MonoBehaviour {
 
     public void RecordOff()
     {
+        data.PlaceLabels(conationValue);
         data.RecordOff();
         red.SetActive(true);
         green.SetActive(false);
@@ -117,5 +118,21 @@ public class UIHandler : MonoBehaviour {
         knob.color = Color.green;
     }
 
+    public void StartCapture()
+    {
+        data.PlaceLabels(conationValue);
+        data.running = true;
+    }
+
+    public void StopCapture()
+    {
+        data.running = false;
+    }
+
+    public void ConationLevel()
+    {
+       conationValue = conationSlider.value;
+       conationTextValue.text = conationValue.ToString();
+    }
     
 }

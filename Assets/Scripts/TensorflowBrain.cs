@@ -15,12 +15,14 @@ public class TensorflowBrain : MonoBehaviour
         void Start()
         {  
             modelFile = "my_model.pb";
+            naos = GetComponent<DataGathering>();
+            eyeData = GetComponent<ReceiveLiveStream>();
             StartCoroutine(Predictor());
+
         }
 
         void Update()
         {
-
         }
 
         TFTensor GetTensor()
@@ -39,6 +41,8 @@ public class TensorflowBrain : MonoBehaviour
         {
             using (var graph = new TFGraph())
             {
+                TFOutput TFinput = graph.Placeholder(TFDataType.Float, new TFShape(-1, 10));
+                TFOutput outputLayer = graph.Placeholder(TFDataType.Float, new TFShape(-1, 10));
                 tensor = new[]
                     {
                         140.285470581055f, 41.11237678527829f, 5.836468505859f, 0.0f, 0.0f, 0.0f, 2.463f, 0.0f,
@@ -51,11 +55,10 @@ public class TensorflowBrain : MonoBehaviour
                     var session = new TFSession(graph);
                     var runner = session.GetRunner();
 
-                    TFOutput TFinput = graph["dense_one/kernel"][0];
-                    TFOutput outputLayer = graph["final/Softmax"][0];
+                    TFinput = graph["dense_one/kernel"][0];
+                    outputLayer = graph["final/Softmax"][0];
 
                     runner.AddInput(TFinput, tensor);
-
                     runner.Fetch(outputLayer);
 
                     var output = runner.Run();
@@ -67,6 +70,6 @@ public class TensorflowBrain : MonoBehaviour
                     foreach (var t in re) Debug.Log(t);
                 }
             }
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(5f);
         }
     }
