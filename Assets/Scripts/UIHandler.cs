@@ -26,11 +26,11 @@ public class UIHandler : MonoBehaviour {
         RD = GetComponent<RestartData>();   
         rls =  GameObject.FindGameObjectWithTag("Data").GetComponent<ReceiveLiveStream>();
         //data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
-        slider.maxValue = (float) data.BaseLineTime;
+        //slider.maxValue = (float) data.BaseLineTime;
     }
     void Update()
     {
-        slider.value = data.loading;
+        //slider.value = data.loading;
     }
 
     public void SetID()
@@ -65,6 +65,8 @@ public class UIHandler : MonoBehaviour {
 
     public void RecordOn()
     {
+        data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
+        data.InitializeVariables();
         red.SetActive(false);
         green.SetActive(true);
         input.SetActive(false);
