@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114392721156589358}
   - component: {fileID: 114736667169844274}
   - component: {fileID: 114176264420791248}
-  - component: {fileID: 114096295686165480}
+  - component: {fileID: 114711405167836838}
   m_Layer: 0
   m_Name: DataGathering
   m_TagString: Data
@@ -43,19 +43,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114096295686165480
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1591246185326820}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a00df49f8aab346b3e9d5a0f9dbced, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  naos: {fileID: 0}
-  eyeData: {fileID: 0}
 --- !u!114 &114176264420791248
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -91,6 +78,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02ae5111ab964474fad41b2187fd79f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &114711405167836838
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1591246185326820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49946584d5aefa748b17bd17d028678a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &114736667169844274

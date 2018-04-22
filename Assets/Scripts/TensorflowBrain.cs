@@ -12,7 +12,7 @@ public class TensorflowBrain : MonoBehaviour
     public DataGathering naos;
     public ReceiveLiveStream eyeData;
 
-        void Start()
+    void Start()
         {  
             modelFile = "my_model.pb";
             naos = GetComponent<DataGathering>();
