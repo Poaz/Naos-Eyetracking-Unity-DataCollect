@@ -1,35 +1,46 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq.Expressions;
 using UnityEngine;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
-//using System.Net.Http;
+using RestSharp;
 using System.Threading;
 using SimpleJSON;
-using Eppy;
+using Tuple = Eppy.Tuple;
+
 
 
 public class ReceiveLiveStream : MonoBehaviour
 {
     
     public bool streaming;
-    Thread sendThread;
-    Thread receiveThread;
+    Thread dataThread, videoThread;
+    Thread receiveThread, receiveVideoThread;
     IPEndPoint ep = new IPEndPoint(IPAddress.Parse("192.168.71.50"), 49152);
-    private UdpClient client;
+    private UdpClient client, client2;
+
+    public bool running = true;
     //Keep-alive message content used to request live data and live video streams
     static string KA_DATA_MSG = "{\"type\": \"live.data.unicast\", \"key\": \"some_GUID\", \"op\": \"start\"}";
+    static string KA_VIDEO_MSG = "{\"type\": \"live.video.unicast\", \"key\": \"some_other_GUID\", \"op\": \"start\"}";
     public string base_url = "http://192.168.71.50"; 
-    private byte[] bytes;
+    private byte[] bytes1, bytes2;
+    private MemoryStream memoryStream;
     
     public double gdlX,gdlY,gdlZ,gdrX,gdrY,gdrZ, velL, velR,  pdl, pdr, ts;
 
     //public List<double>  pdrBuff; 
-    public List<Tuple<double, double>> pdlBuff, pdrBuff, gdlXBuff, gdlYBuff, gdlZBuff, gdrXBuff, gdrYBuff, gdrZBuff;
+    public List<Eppy.Tuple<double, double>> pdlBuff, pdrBuff, gdlXBuff, gdlYBuff, gdlZBuff, gdrXBuff, gdrYBuff, gdrZBuff;
     
-    public int project_id, participant_id;
-    void Awake()
+    public String project_id, participant_id, ca_id, rec_id, status_data;
+
+    public RenderTexture RenderTexture;
+
+    private void Awake()
     {
         DontDestroyOnLoad(gameObject);
         streaming = true;
@@ -37,27 +48,60 @@ public class ReceiveLiveStream : MonoBehaviour
         client = new UdpClient();
         client.Connect(ep);
 
-        bytes = Encoding.ASCII.GetBytes(KA_DATA_MSG);
+        client2 = new UdpClient();
+        client2.Connect(ep);
+
+        bytes1 = Encoding.ASCII.GetBytes(KA_DATA_MSG);
+        bytes2 = Encoding.ASCII.GetBytes(KA_VIDEO_MSG);
+
     }
 
     void Start()
     {
-        sendThread = new Thread(new ThreadStart(SendKAMessage));
-        sendThread.IsBackground = true;
-        sendThread.Start();
+        memoryStream = new MemoryStream();
+      
+
+        print("creating threads");
+        //live data thread
+        dataThread = new Thread(new ThreadStart(SendKAMessage));
+        dataThread.IsBackground = true;
+        dataThread.Start();
+
+        videoThread = new Thread(new ThreadStart(SendKAMessage2));
+        videoThread.IsBackground = true;
+        videoThread.Start();
 
         receiveThread = new Thread(new ThreadStart(ReceiveData));
         receiveThread.IsBackground = true;
-        receiveThread.Start(); 
+        receiveThread.Start();
 
+        receiveVideoThread = new Thread(new ThreadStart(ReceiveVideo));
+        receiveVideoThread.IsBackground = true;
+        receiveVideoThread.Start();
+
+        print("threads created");
        // pdlBuff = new List<Tuple<double, double>>();    
+    }
+
+    public void ReceiveVideo()
+    {
+        byte[] data = new byte[0];
+
+
+        while (running)
+        {
+
+            data = client2.Receive(ref ep);
+            
+            
+        }
     }
 
     public void ReceiveData(){
 
-        byte[] data = new byte[0]; 
+        byte[] data = new byte[0];
 
-        while(true){
+        while (true){
             
             data = client.Receive(ref ep);
            
@@ -235,7 +279,7 @@ public class ReceiveLiveStream : MonoBehaviour
 
     }//Receive data
 
-    private void AddAvgVal(string str, double ts,List<Tuple<double, double>> list, double result){
+    private void AddAvgVal(string str, double ts,List<Eppy.Tuple<double, double>> list, double result){
     
         list.RemoveAt(0);
         list.Add(Tuple.Create(ts,double.Parse(str)));
@@ -251,56 +295,227 @@ public class ReceiveLiveStream : MonoBehaviour
     
     }
 
-    public  void SendKAMessage(){
+    public void SendKAMessage()
+    {
 
-        while(streaming){
+        while (streaming)
+        {
 
-            client.Send(bytes, bytes.Length);
+            client.Send(bytes1, bytes1.Length);
             //print("send message");
-            Thread.Sleep(1000);
+            Thread.Sleep(1);
         }
+    }
+    public void SendKAMessage2()
+    {
+
+        while (streaming)
+        {
+
+            client2.Send(bytes2, bytes2.Length);
+            //print("send message");
+            Thread.Sleep(1);
+        }
+    }
+
+    public IEnumerator WaitForStatus(string apiAction, string key, string callType)
+    {
+        var reqClient = new RestClient();
+        reqClient.BaseUrl = base_url + apiAction;
+        print("status request: " + reqClient.BaseUrl);
+        bool running = true;
+        
+
+        while (running)
+        {
+            var request = new RestRequest();
+            request.AddHeader("Content-Type", "application/json");
+
+            var response = reqClient.Execute(request);
+            yield return new WaitForSeconds(1);
+            var content = JSON.Parse(response.Content); // raw content as string
+
+            print(content[key]);
+           
+            if (callType == "calibration")
+            {
+                if (content[key] == "failed" || content[key] == "calibrated")
+                {
+                    running = false;
+                    status_data = content[key];
+                    print(status_data == "failed" ? "calibration failed" : "calibration succesful");
+                }
+            }
+
+            if (callType == "recording")
+            {
+                print("testing recording key");
+                if (content[key] == "failed" || content[key] == "done")
+                {
+                    running = false;
+                    status_data = content[key];
+
+                    print(status_data == "failed" ? "recording failed" : "recording succesful");
+                }
+            }
+           
+            
+        }
+
+        
         
     }
 
-    public void SendRequest(string apiAction, string jsonData){
-
-        //'Content-Type', 'application/json'
-
-    }
-    public void createProject()
+    public string SendRequest0(string apiAction)
     {
-        //{"pr_info":{"name":"my new project","xid":"19"}}
-        //SendRequest()
-    
+        var reqClient = new RestClient(base_url);
+        var request = new RestRequest(apiAction, Method.POST);
+
+        request.AddHeader("Content-Type", "application/json");
+        request.RequestFormat = DataFormat.Json;
+        request.AddBody(new { });
+
+        var response = reqClient.Execute(request).Content;
+        return response;
     }
 
-    public void createParticipant()
+    public string SendRequest(string apiAction)
     {
-        //called by the setID
+        var reqClient = new RestClient(base_url);
+        //reqClient.BaseUrl = base_url + apiAction;
 
+        var request = new RestRequest(apiAction,Method.POST);
+        request.AddHeader("Content-Type", "application/json");
+        request.RequestFormat = DataFormat.Json;
+        request.AddBody(new { });
+
+        var response = reqClient.Execute(request).Content;
+       // var content = response.Content; // raw content as string
+
+        //read response
+        return response;
+        //json data
     }
-
-    public void  createCalibration()
+    //create participant
+    public string SendRequest2(string apiAction)
     {
+        var reqClient = new RestClient();
+        reqClient.BaseUrl = base_url + apiAction;
 
-/*
-create_calibration(project_id, participant_id):
-    data = {'ca_project': project_id, 'ca_type': 'default', 'ca_participant': participant_id}
-    json_data = post_request('/api/calibrations', data)
-    return json_data['ca_id']
+        var request = new RestRequest(Method.POST);
+        request.AddHeader("Content-Type", "application/json");
 
+        request.RequestFormat = DataFormat.Json;
+        request.AddBody(new { pa_project = project_id });
 
- */
+        var response = reqClient.Execute(request);
+        var content = response.Content;
+        return content;
     }
 
-    public void StartCalibration(){
+    public string SendRequest3(string apiAction)
+    {
+        var reqClient = new RestClient();
+        reqClient.BaseUrl = base_url + apiAction;
 
-        //POST /api/calibrations HTTP/1.1
+        var request = new RestRequest(Method.POST);
+        request.AddHeader("Content-Type", "application/json");
 
-        // post_request('/api/calibrations/' + calibration_id + '/start')
+        request.RequestFormat = DataFormat.Json;
+        request.AddBody(new { ca_project = project_id, ca_type = "default", ca_participant = participant_id });
 
+        var response = reqClient.Execute(request);
+        var content = response.Content;
+        return content;
+    }
+
+    public string SendRequest_3(string apiAction)
+    {
+        var reqClient = new RestClient(base_url);
+        //reqClient.BaseUrl = base_url + apiAction;
+
+        var request = new RestRequest(apiAction,Method.POST);
+        request.AddHeader("Content-Type", "application/json");
+
+        request.RequestFormat = DataFormat.Json;
+        request.AddBody(new { ca_project = project_id, ca_type = "default", ca_participant = participant_id });
+
+        var response = reqClient.Execute(request);
+        var content = response.Content;
+        return content;
+    }
+
+    public string SendRequest4(string apiAction)
+    {
+        var reqClient = new RestClient();
+        reqClient.BaseUrl = base_url + apiAction;
+
+        var request = new RestRequest(Method.POST);
+        request.AddHeader("Content-Type", "application/json");
+
+        request.RequestFormat = DataFormat.Json;
+        request.AddBody(new { rec_participant = participant_id });
+
+        var response = reqClient.Execute(request);
+        var content = response.Content;
+        return content;
+    }
+
+
+    public void CreateProject()
+    {
+        var json_string =  JSON.Parse(SendRequest0("api/projects"));
         
+        
+       //json_string = json_string.Substring(11);
+        project_id = json_string["pr_id"];
 
+    }
+    //argument is project id
+    public void CreateParticipant(string pr_id)
+    {
+        JSONObject data = new JSONObject();
+        data.Add("pr_id",project_id);
+        print("data: "+JSON.Parse(data));
+        var json_string = JSON.Parse(SendRequest2("/api/participants"));
+        print("return from participant:" + json_string.ToString());
+        participant_id = json_string["pa_id"];
+        print("participant id: " + participant_id);
+    }
+  
+
+    public void  CreateCalibration()
+    {
+        var json_string = JSON.Parse(SendRequest_3("api/calibrations"));
+        ca_id = json_string["ca_id"];
+        print("calibration id"+ca_id);
+    }
+
+    public void StartCalibration()
+    {
+        SendRequest("api/calibrations/" + ca_id + "/start");
+        print("started calibration");
+    }
+
+    public void CreateRecording()
+    {
+        var json_string = JSON.Parse(SendRequest4("/api/recordings/"));
+        print("recording string:"+json_string.ToString());
+        rec_id = json_string["rec_id"];
+        print("recording id" +rec_id);
+    }
+
+    public void StartRecording()
+    {
+        print("startRecord command: " + "/api/recordings/" + rec_id + "/start");
+        SendRequest("api/recordings/" + rec_id + "/start");
+    }
+
+    public void StopRecording()
+    {
+        print("stopRecord command: " + "/api/recordings/" + rec_id + "/stop");
+        SendRequest("api/recordings/" + rec_id + "/stop");
+        print("recording ended");
     }
 
     public double GetGDLX()
@@ -347,8 +562,50 @@ create_calibration(project_id, participant_id):
 
             client.Close();
             streaming = false;
-            
         }
+
+        if (Input.GetKeyUp(KeyCode.A))
+        {
+            print("A");
+            CreateProject();
+            CreateParticipant(project_id);
+            CreateCalibration();           
+            
+            print("Project: " + project_id +" Participant: " + participant_id + " Calibration: "+ca_id);
+        }
+
+        if (Input.GetKeyUp(KeyCode.S))
+        {
+            StartCalibration();
+            StartCoroutine(WaitForStatus("/api/calibrations/" + ca_id + "/status", "ca_state", "calibration"));
+        }
+
+        if (Input.GetKeyUp(KeyCode.D))
+        {
+            CreateRecording();
+
+            //StartRecording();
+            StartCoroutine(TestRecording());
+        }
+
+        if (Input.GetKeyUp(KeyCode.B))
+        {
+            print("checking status");
+            TestStatus();
+        }
+    }
+
+    public IEnumerator TestRecording()
+    {
+        StartRecording();
+        yield return new WaitForSeconds(10);
+        StopRecording();    
+    }
+
+    public void TestStatus()
+    {
+        StartCoroutine(WaitForStatus("/api/recordings/" + rec_id + "/status", "rec_state", "recording"));
+       
     }
 
      void OnApplicationQuit()
