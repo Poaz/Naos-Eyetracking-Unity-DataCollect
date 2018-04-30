@@ -11,6 +11,7 @@ public class UIHandler : MonoBehaviour
     public GameObject IDWarning, input, ConationPopup;
     public ExcelStore data;
     public ReceiveLiveStream rls;
+    public Brain KerasBrain;
     public GameObject red, green;
     public RestartData RD;
     public Button StartButton, calibrationContinue, ConationButton;

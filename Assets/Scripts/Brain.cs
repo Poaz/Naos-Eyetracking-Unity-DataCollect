@@ -7,8 +7,11 @@ public class Brain : MonoBehaviour
 {
     public string pythonLocation, pythonScript;
     public DataGathering naos;
+    public ExcelStore store;
     public ReceiveLiveStream eyeData;
     private float[] testTensor;
+    private float time;
+    public int prediction;
 
     public void Start()
     {
@@ -20,13 +23,16 @@ public class Brain : MonoBehaviour
 
         naos = GetComponent<DataGathering>();
         eyeData = GetComponent<ReceiveLiveStream>();
+        store = GetComponent<ExcelStore>();
     }
 
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.G))
+        time += Time.deltaTime;
+        if (store.running && time <= 2)
         {
-            UnityEngine.Debug.Log(Predict());
+            prediction = Predict();
+            time = 0;
         }
     }
 
@@ -59,7 +65,7 @@ public class Brain : MonoBehaviour
 
         //Get new Tensor
         //var Tensor = GetTensor();
-        var tensor = testTensor;
+        var tensor = GetTensor();
 
         //Startup the Python script, calling it with reference to self + all arguments for prediction.
         myProcessStartInfo.Arguments = pythonScript + " " + tensor[0] + " " + tensor[1] + " " + tensor[2] + " " +
@@ -72,10 +78,13 @@ public class Brain : MonoBehaviour
         Process myProcess = new Process();
         myProcess.StartInfo = myProcessStartInfo;
 
+        /*
         UnityEngine.Debug.Log("Calling Python script with arguments:" + " " + tensor[0] + " " + tensor[1] + " " +
                               tensor[2] + " " + tensor[3]
                               + " " + tensor[4] + " " + tensor[5] + " " + tensor[6] + " " + tensor[7] + " " + tensor[8]
                               + " " + tensor[9]);
+
+        */ 
 
         //Start the process
         myProcess.Start();

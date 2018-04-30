@@ -16,25 +16,21 @@ public class ExcelStore : MonoBehaviour
 
     //Data Variables
     public string ID, testType;
-    public List<double>  gdlX, gdlY, gdlZ, gdrX, gdrY, gdrZ, pdl, pdr, HR, HR_Buff, GSR, ConationLevels;
+    public List<double>  gdlX, gdlY, gdlZ, gdrX, gdrY, gdrZ, pdl, pdr, HR, HR_Buff, GSR, ConationLevels, PredictedConation;
     //public double[] ConationLevels;
     public List<String> timeStamp, data;
-
     public DataGathering naos;
-
     public ReceiveLiveStream eyeData;
-
+    public Brain KerasBrain;
     public double BaseLineTime = 180,HR_Base;
     public float loading, time;
     
-
-
     void Start()
     {
         filePath = string.Concat(Application.dataPath, "/data/");
         naos = GetComponent<DataGathering>();
         eyeData = GetComponent<ReceiveLiveStream>();
-        //obtainBaseline = true;
+        KerasBrain = GetComponent<Brain>();
         loading = 0;
     }
 
@@ -46,16 +42,21 @@ public class ExcelStore : MonoBehaviour
             once = false;
         }
 
-		if (naos.GetConnection() && running)
-		{
-            HR.Add(naos.GetHeartRate()-HR_Base);
-			GSR.Add(naos.GetGsr());
-            print("running");
-			timeStamp.Add(DateTime.Now.ToLongTimeString());
-		}
-
-        if(eyeData != null && running)
-        {            
+        if(running && eyeData != null && naos.GetConnection())
+        {
+            if (
+                eyeData.GetGDLX() != 0 &&
+                eyeData.GetGDLY() != 0 &&
+                eyeData.GetGDLZ() != 0 &&
+                eyeData.GetGDRX() != 0 &&
+                eyeData.GetGDRY() != 0 &&
+                eyeData.GetGDRZ() != 0 &&
+                eyeData.GetPDL() != 0 &&
+                eyeData.GetPDR() != 0 &&
+                naos.GetHeartRate() != 0 &&
+                naos.GetGsr() != 0
+                )
+            {               
             gdlX.Add(eyeData.GetGDLX());
             gdlY.Add(eyeData.GetGDLY());
             gdlZ.Add(eyeData.GetGDLZ());
@@ -64,6 +65,10 @@ public class ExcelStore : MonoBehaviour
             gdrZ.Add(eyeData.GetGDRZ());
             pdl.Add(eyeData.GetPDL());
             pdr.Add(eyeData.GetPDR());
+            HR.Add(naos.GetHeartRate() - HR_Base);
+            GSR.Add(naos.GetGsr());
+            PredictedConation.Add(KerasBrain.prediction);
+            }
         }
 	}
 
@@ -76,17 +81,16 @@ public class ExcelStore : MonoBehaviour
 
 		string[] lines = new string[gdlX.Count];
 
-        string headers= "GDLX, GDLY,GDLZ, GDRX, GDRY, GDRZ, PL, PR, HR, GSR, ConationLevel";
+        string headers= "GDLX, GDLY,GDLZ, GDRX, GDRY, GDRZ, PL, PR, HR, GSR, ConationLevel, PredictedConation";
 
         lines[0] = headers;
 
-        print(HR.Count);
-        print(GSR.Count);
-        print(ConationLevels.Count);
         for (int i = 1; i < ConationLevels.Count; i++)
         {
-            //lines[i] = HR[i].ToString() + "," + GSR[i].ToString() + "," + ConationLevels[i].ToString();
-            lines [i] =  gdlX[i].ToString() + ","+ gdlY[i].ToString() +","+ gdlZ[i].ToString() +","+ gdrX[i].ToString() +","+ gdrY[i].ToString() +","+ gdrZ[i].ToString() +","+ pdl[i].ToString() +","+ pdr[i].ToString()+ "," + HR[i].ToString() + ","  + GSR[i].ToString() + "," + ConationLevels[i].ToString();
+            lines [i] =  gdlX[i].ToString() + ","+ gdlY[i].ToString() +","+ gdlZ[i].ToString() +","+ gdrX[i].ToString() +","+ 
+                         gdrY[i].ToString() +","+ gdrZ[i].ToString() +","+ pdl[i].ToString() +","+ pdr[i].ToString()+ "," + 
+                         HR[i].ToString() + ","  + GSR[i].ToString() + "," + ConationLevels[i].ToString() + "," + 
+                         PredictedConation[i].ToString();
         }
        
         File.WriteAllLines(filePath + fileName + ".txt", lines);
@@ -121,8 +125,7 @@ public class ExcelStore : MonoBehaviour
 		GSR = null;
 		fileName = null;
 		ID = null;
-		running = false;
-        
+		running = false;       
     }
 
     public void InitializeVariables()
@@ -138,14 +141,14 @@ public class ExcelStore : MonoBehaviour
         HR = new List<double>();
         GSR = new List<double>();
         filePath = string.Concat(Application.dataPath, "/data/");
-        naos = this.GetComponent<DataGathering>();
-        //obtainBaseline = true;
+        naos = GetComponent<DataGathering>();
+        eyeData = GetComponent<ReceiveLiveStream>();
+        KerasBrain = GetComponent<Brain>();
     }
 
     public IEnumerator CalculateBaseline()
     {
          time = 0;
-
         while (time < 20)
         {
             time += Time.deltaTime;
@@ -153,7 +156,6 @@ public class ExcelStore : MonoBehaviour
 	        GSR.Add(naos.GetGsr());
             loading = HR_Buff.Count;
             yield return new WaitForSeconds(0.001f);
-            print(naos.GetHeartRate());
         }
         HR_Base = HR_Buff.Average(); //move decimal point 2 
         obtainingBaseline = false;
@@ -169,14 +171,11 @@ public class ExcelStore : MonoBehaviour
 
     public void PlaceLabels(float ConationLevel)
     {
-        print(prevItems);
         var items = gdlX.Count;
-        print(items);
         for (int i = prevItems; i < items-1; i++)
         {
             print(ConationLevel);
             ConationLevels.Add(ConationLevel);
-
         }
         prevItems = gdlX.Count;
     }
