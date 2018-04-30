@@ -63,7 +63,8 @@ public class ReceiveLiveStream : MonoBehaviour
 
     void Start()
     {
-        project_id = "";
+        project_id = PlayerPrefs.GetString("pr_id");
+
         memoryStream = new MemoryStream();
         _uiHandler = GameObject.FindGameObjectWithTag("UI").GetComponent<UIHandler>();
       
@@ -465,8 +466,6 @@ public class ReceiveLiveStream : MonoBehaviour
         var json_string = JSON.Parse(SendRequest("api/projects"));
             project_id = json_string["pr_id"];
         }
-        
-
     }
     //argument is project id
     public void CreateParticipant(string pr_id)

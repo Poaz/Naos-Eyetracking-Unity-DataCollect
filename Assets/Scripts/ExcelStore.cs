@@ -148,21 +148,14 @@ public class ExcelStore : MonoBehaviour
 
         while (time < 20)
         {
-        time += Time.deltaTime;
-        HR_Buff.Add(naos.GetHeartRate());
-	    GSR.Add(naos.GetGsr());
-        loading = HR_Buff.Count;
-        yield return new WaitForSeconds(0.001f);
-        print(naos.GetHeartRate());
+            time += Time.deltaTime;
+            HR_Buff.Add(naos.GetHeartRate());
+	        GSR.Add(naos.GetGsr());
+            loading = HR_Buff.Count;
+            yield return new WaitForSeconds(0.001f);
+            print(naos.GetHeartRate());
         }
-        foreach (var t in HR_Buff)
-        {
-         //   HR_Base += t;
-        }
-
-        HR_Base = HR_Buff.Average();
-       // HR_Base /= HR_Buff.Count;
-        print(HR_Buff.Count);
+        HR_Base = HR_Buff.Average(); //move decimal point 2 
         obtainingBaseline = false;
     }
 
