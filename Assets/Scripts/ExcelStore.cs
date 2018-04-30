@@ -4,13 +4,14 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Linq;
 
 public class ExcelStore : MonoBehaviour
 {
     //Privates
     private static string filePath;
     private string fileName, tempIntensities, tempSampleNumber, tempDuration;
-    public bool running = false, obtainingBaseline;
+    public bool running = false, obtainingBaseline, once = true;
     private int prevItems = 0;
 
     //Data Variables
@@ -24,7 +25,8 @@ public class ExcelStore : MonoBehaviour
     public ReceiveLiveStream eyeData;
 
     public double BaseLineTime = 180,HR_Base;
-    public float loading;
+    public float loading, time;
+    
 
 
     void Start()
@@ -38,9 +40,10 @@ public class ExcelStore : MonoBehaviour
 
 	public void FixedUpdate()
 	{
-        if(naos.GetConnection() && obtainingBaseline && HR_Buff.Count < BaseLineTime)
+        if(naos.GetConnection() && obtainingBaseline && HR_Buff.Count < BaseLineTime && once)
         {          
             StartCoroutine(CalculateBaseline());
+            once = false;
         }
 
 		if (naos.GetConnection() && running)
@@ -140,29 +143,35 @@ public class ExcelStore : MonoBehaviour
     }
 
     public IEnumerator CalculateBaseline()
-    {      
+    {
+         time = 0;
+
+        while (time < 20)
+        {
+        time += Time.deltaTime;
         HR_Buff.Add(naos.GetHeartRate());
 	    GSR.Add(naos.GetGsr());
         loading = HR_Buff.Count;
-
-        yield return new WaitForSeconds(1);
-
-        if(HR_Buff.Count == BaseLineTime)
-        {
-            foreach (var t in HR_Buff)
-            {
-                HR_Base += t;
-            }
-            HR_Base /= HR_Buff.Count;
-            obtainingBaseline = false;
+        yield return new WaitForSeconds(0.001f);
+        print(naos.GetHeartRate());
         }
+        foreach (var t in HR_Buff)
+        {
+         //   HR_Base += t;
+        }
+
+        HR_Base = HR_Buff.Average();
+       // HR_Base /= HR_Buff.Count;
+        print(HR_Buff.Count);
+        obtainingBaseline = false;
     }
 
     public void ObtainBaseline()
     {
         HR_Buff = new List<double>();
         HR_Base = 0;
-        obtainingBaseline = true;     
+        obtainingBaseline = true;
+        //once = true;
     }
 
     public void PlaceLabels(float ConationLevel)

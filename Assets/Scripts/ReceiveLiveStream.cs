@@ -18,7 +18,7 @@ using UnityEngine.UI;
 public class ReceiveLiveStream : MonoBehaviour
 {
     public string test = "";
-    public bool streaming;
+    public bool streaming, CalibrationSuccesful = false;
     Thread dataThread, videoThread;
     Thread receiveThread, receiveVideoThread;
     IPEndPoint ep = new IPEndPoint(IPAddress.Parse("192.168.71.50"), 49152);
@@ -63,6 +63,7 @@ public class ReceiveLiveStream : MonoBehaviour
 
     void Start()
     {
+        project_id = "";
         memoryStream = new MemoryStream();
         _uiHandler = GameObject.FindGameObjectWithTag("UI").GetComponent<UIHandler>();
       
@@ -345,7 +346,9 @@ public class ReceiveLiveStream : MonoBehaviour
                 {
                     running = false;
                     status_data = content[key];
-                    print(status_data == "failed" ? "calibration failed: "+content.ToString() : "calibration succesful");
+                    print(status_data == "failed" ? "calibration failed: " +content.ToString() : "calibration succesful");
+                    CalibrationSuccesful = status_data != "failed";
+                    
                 }
             }
 
@@ -471,7 +474,7 @@ public class ReceiveLiveStream : MonoBehaviour
         JSONObject data = new JSONObject();
         data.Add("pr_id",project_id);
         var json_string = JSON.Parse(SendRequest2("/api/participants"));
-        participant_id = json_string["pa_id"];
+        participant_id = json_string["pa_id"];  
     }
   
 
@@ -555,6 +558,14 @@ public class ReceiveLiveStream : MonoBehaviour
         StartCalibration();
         StartCoroutine(WaitForStatus("/api/calibrations/" + ca_id + "/status", "ca_state", "calibration"));
     }
+
+    public void PrepForTest()
+    {
+        CreateProject();
+        CreateParticipant(project_id);
+        CreateCalibration();
+        print("Project: " + project_id + " Participant: " + participant_id + " Calibration: " + ca_id);
+    }
     
     void Update()
     {
@@ -571,9 +582,9 @@ public class ReceiveLiveStream : MonoBehaviour
             print("A");
             CreateProject();
             CreateParticipant(project_id);
-            CreateCalibration();           
-            
-            print("Project: " + project_id +" Participant: " + participant_id + " Calibration: "+ca_id);
+            CreateCalibration();
+
+            print("Project: " + project_id + " Participant: " + participant_id + " Calibration: " + ca_id);
         }
 
         if (Input.GetKeyUp(KeyCode.S))

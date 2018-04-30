@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 8
+  serializedVersion: 9
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -39,6 +39,7 @@ RenderSettings:
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
   m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -54,11 +55,10 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 9
+    serializedVersion: 10
     m_Resolution: 2
     m_BakeResolution: 40
-    m_TextureWidth: 1024
-    m_TextureHeight: 1024
+    m_AtlasSize: 1024
     m_AO: 0
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
@@ -902,10 +902,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eefe61370b317bf4cab6da1ad479293b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pythonLocation: 
-  pythonScript: 
-  naos: {fileID: 0}
-  eyeData: {fileID: 0}
 --- !u!114 &280751086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -918,7 +914,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 956243f1c6625564cb56b20cebdd765a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  test: 
   streaming: 0
+  CalibrationSuccesful: 0
   running: 1
   base_url: http://192.168.71.50
   gdlX: 0
@@ -938,6 +936,10 @@ MonoBehaviour:
   rec_id: 
   status_data: 
   RenderTexture: {fileID: 0}
+  TobiiStartRec: {fileID: 0}
+  TobiiStopRec: {fileID: 0}
+  TobiiPauseRec: {fileID: 0}
+  KalibrerTobii: {fileID: 0}
 --- !u!114 &280751087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1462,6 +1464,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   running: 0
   obtainingBaseline: 0
+  once: 1
   ID: 
   testType: 
   gdlX: []
@@ -1483,6 +1486,7 @@ MonoBehaviour:
   BaseLineTime: 180
   HR_Base: 0
   loading: 0
+  time: 0
 --- !u!1 &542586150
 GameObject:
   m_ObjectHideFlags: 0
@@ -1651,7 +1655,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 872167326}
-        m_MethodName: Calibrate
+        m_MethodName: RecordBaseline
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2032,7 +2036,7 @@ GameObject:
   - component: {fileID: 872167327}
   m_Layer: 5
   m_Name: Canvas
-  m_TagString: Untagged
+  m_TagString: UI
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2132,7 +2136,7 @@ MonoBehaviour:
   ID: 
   IDWarning: {fileID: 1755334216}
   input: {fileID: 1521334416}
-  ConationPopup: {fileID: 0}
+  ConationPopup: {fileID: 21731002}
   data: {fileID: 540963395}
   rls: {fileID: 0}
   red: {fileID: 1170334913}
@@ -2140,7 +2144,7 @@ MonoBehaviour:
   RD: {fileID: 0}
   StartButton: {fileID: 1638375803}
   calibrationContinue: {fileID: 1489105025}
-  ConationButton: {fileID: 0}
+  ConationButton: {fileID: 119940112}
   conationValue: 0
   time: 0
   conationTextValue: {fileID: 968240592}
@@ -3422,6 +3426,17 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 0}
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1638375804
@@ -4011,7 +4026,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2061970920}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 872167326}
+        m_MethodName: RecordOn
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &2061970920

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
+//using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,6 +47,11 @@ public class UIHandler : MonoBehaviour
             ConationButton.interactable = true;
         }
 
+        if (rls.CalibrationSuccesful && !data.obtainingBaseline)
+        {
+            CalibrationDone();
+        }
+
     }
 
     public void SetID()
@@ -81,11 +86,18 @@ public class UIHandler : MonoBehaviour
     {
         data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
         data.InitializeVariables();
+        rls.PrepForTest();
+    }
+
+    public void StartCalibration()
+    {
+        rls.CalibrationTest();
     }
 
     public void RecordOn()
     {
         data.RecordOn();
+        rls.StartRecording();
     }
 
     public void PauseRecord()
