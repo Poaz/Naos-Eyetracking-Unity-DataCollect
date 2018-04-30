@@ -24,7 +24,7 @@ public class Brain : MonoBehaviour
 
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
+        if (Input.GetKeyDown(KeyCode.G))
         {
             UnityEngine.Debug.Log(Predict());
         }
@@ -45,7 +45,7 @@ public class Brain : MonoBehaviour
     public int Predict()
     {
         // full path of python interpreter
-        pythonLocation = @"C:\Users\Dines\AppData\Local\Programs\Python\Python36\python.exe";
+        pythonLocation = @"C:\Users\Dines\AppData\Local\Programs\Python\Python36\pythonw.exe";
 
         // python app to call
         pythonScript = @"D:\Projects\NaosQGMouse-DataCollecting\Assets\Scripts\sum.py";
