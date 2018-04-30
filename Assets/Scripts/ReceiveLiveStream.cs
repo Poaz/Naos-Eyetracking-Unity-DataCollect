@@ -11,12 +11,13 @@ using RestSharp;
 using System.Threading;
 using SimpleJSON;
 using Tuple = Eppy.Tuple;
+using UnityEngine.UI;
 
 
 
 public class ReceiveLiveStream : MonoBehaviour
 {
-    
+    public string test = "";
     public bool streaming;
     Thread dataThread, videoThread;
     Thread receiveThread, receiveVideoThread;
@@ -40,6 +41,10 @@ public class ReceiveLiveStream : MonoBehaviour
 
     public RenderTexture RenderTexture;
 
+    public  Button TobiiStartRec, TobiiStopRec, TobiiPauseRec, KalibrerTobii;
+
+    private UIHandler _uiHandler;
+
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
@@ -59,6 +64,7 @@ public class ReceiveLiveStream : MonoBehaviour
     void Start()
     {
         memoryStream = new MemoryStream();
+        _uiHandler = GameObject.FindGameObjectWithTag("UI").GetComponent<UIHandler>();
       
 
         print("creating threads");
@@ -333,7 +339,7 @@ public class ReceiveLiveStream : MonoBehaviour
 
             var response = reqClient.Execute(request);
             yield return new WaitForSeconds(1);
-            var content = JSON.Parse(response.Content); // raw content as string
+            var content = JSON.Parse(response.Content); 
 
             print(content[key]);
            
@@ -343,7 +349,7 @@ public class ReceiveLiveStream : MonoBehaviour
                 {
                     running = false;
                     status_data = content[key];
-                    print(status_data == "failed" ? "calibration failed" : "calibration succesful");
+                    print(status_data == "failed" ? "calibration failed: "+content.ToString() : "calibration succesful");
                 }
             }
 
@@ -358,12 +364,7 @@ public class ReceiveLiveStream : MonoBehaviour
                     print(status_data == "failed" ? "recording failed" : "recording succesful");
                 }
             }
-           
-            
         }
-
-        
-        
     }
 
     public string SendRequest0(string apiAction)
@@ -406,10 +407,11 @@ public class ReceiveLiveStream : MonoBehaviour
         request.AddHeader("Content-Type", "application/json");
 
         request.RequestFormat = DataFormat.Json;
-        request.AddBody(new { pa_project = project_id });
+        request.AddBody(new { pa_project = project_id, pa_info = new {name = _uiHandler.ID} });
 
         var response = reqClient.Execute(request);
         var content = response.Content;
+
         return content;
     }
 
@@ -464,11 +466,12 @@ public class ReceiveLiveStream : MonoBehaviour
 
     public void CreateProject()
     {
-        var json_string =  JSON.Parse(SendRequest0("api/projects"));
+        if(project_id == "")
+        {
+        var json_string = JSON.Parse(SendRequest0("api/projects"));
+            project_id = json_string["pr_id"];
+        }
         
-        
-       //json_string = json_string.Substring(11);
-        project_id = json_string["pr_id"];
 
     }
     //argument is project id
@@ -476,11 +479,8 @@ public class ReceiveLiveStream : MonoBehaviour
     {
         JSONObject data = new JSONObject();
         data.Add("pr_id",project_id);
-        print("data: "+JSON.Parse(data));
         var json_string = JSON.Parse(SendRequest2("/api/participants"));
-        print("return from participant:" + json_string.ToString());
         participant_id = json_string["pa_id"];
-        print("participant id: " + participant_id);
     }
   
 
@@ -488,7 +488,6 @@ public class ReceiveLiveStream : MonoBehaviour
     {
         var json_string = JSON.Parse(SendRequest_3("api/calibrations"));
         ca_id = json_string["ca_id"];
-        print("calibration id"+ca_id);
     }
 
     public void StartCalibration()
@@ -500,9 +499,7 @@ public class ReceiveLiveStream : MonoBehaviour
     public void CreateRecording()
     {
         var json_string = JSON.Parse(SendRequest4("/api/recordings/"));
-        print("recording string:"+json_string.ToString());
         rec_id = json_string["rec_id"];
-        print("recording id" +rec_id);
     }
 
     public void StartRecording()
@@ -516,6 +513,13 @@ public class ReceiveLiveStream : MonoBehaviour
         print("stopRecord command: " + "/api/recordings/" + rec_id + "/stop");
         SendRequest("api/recordings/" + rec_id + "/stop");
         print("recording ended");
+    }
+
+    public void PauseRecording()
+    {
+        print("stopRecord command: " + "/api/recordings/" + rec_id + "/stop");
+        SendRequest("api/recordings/" + rec_id + "/pause");
+        print("recording paused");
     }
 
     public double GetGDLX()
@@ -553,6 +557,13 @@ public class ReceiveLiveStream : MonoBehaviour
     {
         return pdr;
     }
+
+    public void CalibrationTest()
+    {
+        print("start calibration");
+        StartCalibration();
+        StartCoroutine(WaitForStatus("/api/calibrations/" + ca_id + "/status", "ca_state", "calibration"));
+    }
     
     void Update()
     {
@@ -583,10 +594,22 @@ public class ReceiveLiveStream : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.D))
         {
             CreateRecording();
-
-            //StartRecording();
-            StartCoroutine(TestRecording());
+            print("recording created");
+            StartRecording();
+            print("recording started");
         }
+
+        if (Input.GetKeyUp(KeyCode.F))
+        {
+            StopRecording();
+            print("Recording stopped");
+        }
+        if (Input.GetKeyUp(KeyCode.P))
+        {
+            PauseRecording();
+            print("Recording paused");
+        }
+
 
         if (Input.GetKeyUp(KeyCode.B))
         {
