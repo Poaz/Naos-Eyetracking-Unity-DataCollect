@@ -274,13 +274,9 @@ public class ReceiveLiveStream : MonoBehaviour
                             pdr = avg/pdlBuff.Count;
                             
                         }
-
                     }
-
                 }
-
             }
-               
         }//while true
 
     }//Receive data
@@ -366,7 +362,7 @@ public class ReceiveLiveStream : MonoBehaviour
             }
         }
     }
-
+    /*
     public string SendRequest0(string apiAction)
     {
         var reqClient = new RestClient(base_url);
@@ -379,21 +375,16 @@ public class ReceiveLiveStream : MonoBehaviour
         var response = reqClient.Execute(request).Content;
         return response;
     }
-
+    */
     public string SendRequest(string apiAction)
     {
         var reqClient = new RestClient(base_url);
-        //reqClient.BaseUrl = base_url + apiAction;
-
         var request = new RestRequest(apiAction,Method.POST);
         request.AddHeader("Content-Type", "application/json");
         request.RequestFormat = DataFormat.Json;
         request.AddBody(new { });
 
         var response = reqClient.Execute(request).Content;
-       // var content = response.Content; // raw content as string
-
-        //read response
         return response;
         //json data
     }
@@ -468,7 +459,7 @@ public class ReceiveLiveStream : MonoBehaviour
     {
         if(project_id == "")
         {
-        var json_string = JSON.Parse(SendRequest0("api/projects"));
+        var json_string = JSON.Parse(SendRequest("api/projects"));
             project_id = json_string["pr_id"];
         }
         
