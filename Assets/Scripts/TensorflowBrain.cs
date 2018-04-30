@@ -41,22 +41,24 @@ public class TensorflowBrain : MonoBehaviour
         {
             using (var graph = new TFGraph())
             {
-                TFOutput TFinput = graph.Placeholder(TFDataType.Float, new TFShape(-1, 9));
+                TFOutput TFinput = graph.Placeholder(TFDataType.Float, new TFShape(-1, 10));
                 TFOutput outputLayer = graph.Placeholder(TFDataType.Float, new TFShape(-1, 7));
-                tensor = new[]
+                tensor = new[,]
                     {
-                        140.285470581055f, 41.11237678527829f, 5.836468505859f, 0.0f, 0.0f, 0.0f, 2.463f, 0.0f,
-                        64.28699999999999f, 0.7287418126212261f
+                        {140.285470581055f, 41.11237678527829f, 5.836468505859f, 0.0f, 0.0f, 0.0f, 2.463f, 0.0f,
+                        64.28699999999999f, 0.7287418126212261f},
+                        {140.285470581055f, 41.11237678527829f, 5.836468505859f, 0.0f, 0.0f, 0.0f, 2.463f, 0.0f,
+                        64.28699999999999f, 0.7287418126212261f}
                     };
-                //tensor = GetTensor();
-                if (tensor != null)
+            //tensor = GetTensor();
+            if (tensor != null)
                 {
                     graph.Import(File.ReadAllBytes("Assets/TensorModel/" + modelFile));
                     var session = new TFSession(graph);
                     var runner = session.GetRunner();
 
                     TFinput = graph["dense_one_input"][0];
-                    outputLayer = graph["activation_2/Relu"][0];
+                    outputLayer = graph["dense_3_out"][0];
                     runner.Fetch(outputLayer);
                     runner.AddInput(TFinput, tensor);
                     
@@ -64,10 +66,10 @@ public class TensorflowBrain : MonoBehaviour
                     var output = runner.Run();
 
                     TFTensor results = output[0];
+                    Debug.Log(results);
+                    //var re = (float[]) results.GetValue(jagged: false);
 
-                    var re = (float[]) results.GetValue(jagged: false);
-
-                    foreach (var t in re) Debug.Log(t);
+                    //foreach (var t in re) Debug.Log(t);
                 }
             }
             return null;
