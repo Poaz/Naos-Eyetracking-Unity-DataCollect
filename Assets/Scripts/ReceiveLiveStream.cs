@@ -461,10 +461,16 @@ public class ReceiveLiveStream : MonoBehaviour
 
     public void CreateProject()
     {
-        if(project_id == "")
+        print("current project id:" + project_id );
+        if (project_id == "")
         {
         var json_string = JSON.Parse(SendRequest("api/projects"));
             project_id = json_string["pr_id"];
+            PlayerPrefs.SetString("pr_id", project_id);
+        }
+        else
+        {
+            print("current project id:" + project_id );
         }
     }
     //argument is project id
@@ -554,6 +560,7 @@ public class ReceiveLiveStream : MonoBehaviour
     public void CalibrationTest()
     {
         print("start calibration");
+        CreateCalibration();
         StartCalibration();
         StartCoroutine(WaitForStatus("/api/calibrations/" + ca_id + "/status", "ca_state", "calibration"));
     }
@@ -562,8 +569,7 @@ public class ReceiveLiveStream : MonoBehaviour
     {
         CreateProject();
         CreateParticipant(project_id);
-        CreateCalibration();
-        print("Project: " + project_id + " Participant: " + participant_id + " Calibration: " + ca_id);
+        print("Project: " + project_id + " Participant: " + participant_id);
     }
     
     void Update()
