@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
 using UnityEngine;
@@ -30,18 +31,13 @@ public class ReceiveLiveStream : MonoBehaviour
     static string KA_VIDEO_MSG = "{\"type\": \"live.video.unicast\", \"key\": \"some_other_GUID\", \"op\": \"start\"}";
     public string base_url = "http://192.168.71.50"; 
     private byte[] bytes1, bytes2;
-    private MemoryStream memoryStream;
     
     public double gdlX,gdlY,gdlZ,gdrX,gdrY,gdrZ, velL, velR,  pdl, pdr, ts;
 
     //public List<double>  pdrBuff; 
-    public List<Eppy.Tuple<double, double>> pdlBuff, pdrBuff, gdlXBuff, gdlYBuff, gdlZBuff, gdrXBuff, gdrYBuff, gdrZBuff;
-    
+    private List<Eppy.Tuple<double, double>> pdlBuff, pdrBuff, gdlXBuff, gdlYBuff, gdlZBuff, gdrXBuff, gdrYBuff, gdrZBuff;
+
     public String project_id, participant_id, ca_id, rec_id, status_data;
-
-    public RenderTexture RenderTexture;
-
-    public  Button TobiiStartRec, TobiiStopRec, TobiiPauseRec, KalibrerTobii;
 
     private UIHandler _uiHandler;
 
@@ -64,11 +60,8 @@ public class ReceiveLiveStream : MonoBehaviour
     void Start()
     {
         project_id = PlayerPrefs.GetString("pr_id");
-
-        memoryStream = new MemoryStream();
         _uiHandler = GameObject.FindGameObjectWithTag("UI").GetComponent<UIHandler>();
       
-
         print("creating threads");
         //live data thread
         dataThread = new Thread(new ThreadStart(SendKAMessage));
@@ -79,29 +72,50 @@ public class ReceiveLiveStream : MonoBehaviour
         //videoThread.IsBackground = true;
         //videoThread.Start();
 
-        receiveThread = new Thread(new ThreadStart(ReceiveData));
-        receiveThread.IsBackground = true;
-        receiveThread.Start();
+
+        //receiveThread = new Thread(new ThreadStart(ReceiveData));
+        //receiveThread.IsBackground = true;
+        //receiveThread.Start();
 
         //receiveVideoThread = new Thread(new ThreadStart(ReceiveVideo));
         //receiveVideoThread.IsBackground = true;
         //receiveVideoThread.Start();
 
         print("threads created");
-       // pdlBuff = new List<Tuple<double, double>>();    
+      
+       InitBuffers();
+
+       StartCoroutine(CallReceiveData());
+    }
+
+    public void InitBuffers()
+    {
+        pdlBuff  = new  List<Eppy.Tuple<double, double>>();
+        pdrBuff  = new  List<Eppy.Tuple<double, double>>();
+        gdlXBuff = new  List<Eppy.Tuple<double, double>>();
+        gdlYBuff = new  List<Eppy.Tuple<double, double>>();
+        gdlZBuff = new  List<Eppy.Tuple<double, double>>();
+        gdrXBuff = new  List<Eppy.Tuple<double, double>>();
+        gdrYBuff = new  List<Eppy.Tuple<double, double>>();
+        gdrZBuff = new List<Eppy.Tuple<double, double>> ();
     }
 
     public void ReceiveVideo()
     {
         byte[] data = new byte[0];
-
-
+        
         while (running)
         {
-
             data = client2.Receive(ref ep);
-            
-            
+        }
+    }
+
+    public IEnumerator CallReceiveData()
+    {
+        while (running)
+        {
+            ReceiveData();
+            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -109,16 +123,16 @@ public class ReceiveLiveStream : MonoBehaviour
 
         byte[] data = new byte[0];
 
-        while (running)
-        {
-            print("running");
+       // while (running)
+       // {
+            
             data = client.Receive(ref ep);
             
             string json = Encoding.ASCII.GetString(data);
+           // print("json preTrim: " + json.ToString());
             char [] removed = { '{', '}' , '"', ':'} ;
-            json.TrimStart(removed);
-            print(json.ToString());
-            var _json = JSON.Parse(json);
+            //var _json = JSON.Parse(json);
+        
             if(json != ""){
                  
                ts = double.Parse( json.Substring(6 ,10) );
@@ -126,13 +140,14 @@ public class ReceiveLiveStream : MonoBehaviour
                 if(json.Contains("gd")){
 
                     if(json.Contains("left")){
-                        
-                         string gdl = _json["gd"].ToString();
-                         
-                         gdl =  gdl.TrimStart('[');
-                         gdl = gdl.TrimEnd(']');
 
-                         string [] values = gdl.Split(',');
+                        string gdl = json.Substring(json.IndexOf('[') + 1, 19);
+                        string[] values = gdl.Split(',');
+
+                        gdlX = double.Parse(values[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                        gdlY = double.Parse(values[1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                        gdlZ = double.Parse(values[2], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    /*
 
                          //x
                          if(gdlXBuff.Count < 10)
@@ -163,126 +178,129 @@ public class ReceiveLiveStream : MonoBehaviour
                         {
                             AddAvgVal(values[2],ts,gdlZBuff,gdlZ);
                         }
-                         
-                         //gdlX = double.Parse(values[0]);
-                         //gdlY = double.Parse(values[1]);
-                         //gdlZ = double.Parse(values[2]);
+                         */
 
-                    }else{
+                }
+                else
+                {
 
-                        //right
+                    //right
+                    string gdl = json.Substring(json.IndexOf('[') + 1, 19);
+                    string[] values = gdl.Split(',');
 
-                        string gdl = _json["gd"].ToString();
-                         
-                         gdl =  gdl.TrimStart('[');
-                         gdl = gdl.TrimEnd(']');
+                    gdrX = double.Parse(values[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    gdrY = double.Parse(values[1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    gdrZ = double.Parse(values[2], NumberStyles.Float, CultureInfo.InvariantCulture);
 
-                         string [] values = gdl.Split(',');
-
-                          //x
-                         if(gdrXBuff.Count < 10)
+                        /*
+                    //x
+                    if (gdrXBuff.Count < 10)
                         {
                             gdrXBuff.Add(Tuple.Create(ts,double.Parse(values[0])));
-                                                                                  
-                        }else
+                            print("gdrX: " + double.Parse(values[0]));
+
+                    }
+                    else
                         {
                             AddAvgVal(values[0],ts,gdrXBuff,gdrX);
-                        }
+                            print("gdrx: " + double.Parse(values[0]));
+                    }
 
                         //y
                          if(gdrYBuff.Count < 10)
                         {
                             gdrYBuff.Add(Tuple.Create(ts,double.Parse(values[1])));
-                                                                                  
-                        }else
+                            print("gdry: " + double.Parse(values[1]));
+
+                    }
+                    else
                         {
                             AddAvgVal(values[1],ts,gdrYBuff,gdrY);
-                        }
+                            print("gdry: " + double.Parse(values[1]));
+                    }
 
                         //z
                          if(gdrZBuff.Count < 10)
                         {
-                            gdrZBuff.Add(Tuple.Create(ts,double.Parse(values[2])));
-                                                                                  
-                        }else
+                            gdrZBuff.Add(Tuple.Create(ts, double.Parse(values[2])));
+                        print("gdrZ: " + double.Parse(values[2]));
+
+                    }
+                    else
                         {
                             AddAvgVal(values[2],ts,gdrZBuff,gdrZ);
+                            print("gdrz :" + gdrZ.ToString());
                         }
+                        */ //buff left
                          
-                        // gdrX = double.Parse(values[0]);
-                        // gdrY = double.Parse(values[1]);
-                        // gdrZ = double.Parse(values[2]);
-
                     }
 
                 } //gd found
 
                 if(json.Contains("pd")){
 
-                    if(json.Contains("left")){
-                        
-                        string gdl = _json["pd"].ToString();
-                    
-                        gdl =  gdl.TrimStart('[');
-                        gdl = gdl.TrimEnd(']');
-                       // pdl = double.Parse(gdl);
+                   
+                    string pdString = json.Substring(json.IndexOf('p') + 4, 4);
+                    print("pd:" +pdString);
 
-                        if(pdlBuff.Count < 10)
-                        {
-                            pdlBuff.Add(Tuple.Create(ts,double.Parse(gdl)));
-                                                                                  
-                        }else if(pdlBuff.Count == 10){
-                             print("pdl");
+                    if (json.Contains("left"))
+                    {
+                    /*
+                    if (pdlBuff.Count < 10)
+                     {
+                         pdlBuff.Add(Tuple.Create(ts, double.Parse(pdString, NumberStyles.Float, CultureInfo.InvariantCulture)));
+                     }
+                     else if (pdlBuff.Count == 10)
+                     {
+                         pdlBuff.RemoveAt(0);
+                         pdlBuff.Add(Tuple.Create(ts, double.Parse(pdString, NumberStyles.Float, CultureInfo.InvariantCulture)));
 
-                            pdlBuff.RemoveAt(0);
-                            pdlBuff.Add(Tuple.Create(ts,double.Parse(gdl)));
-                            // beregn average                                                      
-                           
-                           double avg = 0;
-                           for (int i = 0; i < pdlBuff.Count-1; i++)
-                           {
-                             avg +=  (pdlBuff[i].Item2-pdlBuff[i+1].Item2)/(pdlBuff[i].Item1-pdlBuff[i+1].Item1);
-                           }
-                            // overfør average
-                            pdl = avg/pdlBuff.Count;
-                            
+                         // beregn average                                                      
+                         double avg = 0;
+                         for (int i = 0; i < pdlBuff.Count - 1; i++)
+                         {
+                             avg += (pdlBuff[i].Item2 - pdlBuff[i + 1].Item2) / (pdlBuff[i].Item1 - pdlBuff[i + 1].Item1);
+                         }
+                         // overfør average
+                         pdl = avg / pdlBuff.Count;
+                     }
+                     */
+                    pdl = double.Parse(pdString, NumberStyles.Float, CultureInfo.InvariantCulture);
+                }
+                    else
+                    {
+                        pdr = double.Parse(pdString, NumberStyles.Float, CultureInfo.InvariantCulture);
+                    //pdr
+                    /*
+                    if(pdrBuff.Count < 10)
+                    {
+                        pdrBuff.Add(Tuple.Create(ts,double.Parse(pdString, NumberStyles.Float, CultureInfo.InvariantCulture)));
 
-                        }
-                      
-                    }else{
-                       //pdr
-                        string gdl = _json["pd"].ToString();
-                        
-                        gdl =  gdl.TrimStart('[');
-                        gdl = gdl.TrimEnd(']');
-                        //pdr = double.Parse(gdl);
+                    }else if(pdrBuff.Count == 10){
+                        pdrBuff.RemoveAt(0);
+                        pdrBuff.Add(Tuple.Create(ts,double.Parse(pdString, NumberStyles.Float, CultureInfo.InvariantCulture)));
+                        // beregn average 
+                       double avg = 0;
+                       for (int i = 0; i < pdrBuff.Count-1; i++)
+                       {
+                         avg +=  (pdrBuff[i].Item2-pdrBuff[i+1].Item2)/(pdrBuff[i].Item1-pdrBuff[i+1].Item1);
+                       }
+                        // overfør average
+                        pdr = avg/pdlBuff.Count;
 
-                        if(pdrBuff.Count < 10)
-                        {
-                            pdrBuff.Add(Tuple.Create(ts,double.Parse(gdl)));
-                                                                                  
-                        }else if(pdrBuff.Count == 10){
-                             print("pdl");
-
-                            pdrBuff.RemoveAt(0);
-                            pdrBuff.Add(Tuple.Create(ts,double.Parse(gdl)));
-                            // beregn average                                                      
-                           
-                           double avg = 0;
-                           for (int i = 0; i < pdrBuff.Count-1; i++)
-                           {
-                             avg +=  (pdrBuff[i].Item2-pdrBuff[i+1].Item2)/(pdrBuff[i].Item1-pdrBuff[i+1].Item1);
-                           }
-                            // overfør average
-                            pdr = avg/pdlBuff.Count;
-                            
-                        }
                     }
+                    */
+                    }
+                } //pd
+
+                if (json.Contains("gp"))
+                {
+
                 }
             }
-        }//while true
-
     }//Receive data
+
+
 
     private void AddAvgVal(string str, double ts,List<Eppy.Tuple<double, double>> list, double result){
     
@@ -297,6 +315,7 @@ public class ReceiveLiveStream : MonoBehaviour
        }
         // overfør average
         result = avg/list.Count;
+        
     
     }
 

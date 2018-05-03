@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114392721156589358}
   - component: {fileID: 114736667169844274}
   - component: {fileID: 114176264420791248}
-  - component: {fileID: 114711405167836838}
+  - component: {fileID: 114281062098291938}
   m_Layer: 0
   m_Name: DataGathering
   m_TagString: Data
@@ -54,7 +54,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 956243f1c6625564cb56b20cebdd765a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  test: 
   streaming: 0
+  CalibrationSuccesful: 0
+  running: 1
   base_url: http://192.168.71.50
   gdlX: 0
   gdlY: 0
@@ -69,6 +72,20 @@ MonoBehaviour:
   ts: 0
   project_id: 0
   participant_id: 0
+  ca_id: 
+  rec_id: 
+  status_data: 
+--- !u!114 &114281062098291938
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1591246185326820}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114392721156589358
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -78,17 +95,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02ae5111ab964474fad41b2187fd79f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &114711405167836838
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1591246185326820}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49946584d5aefa748b17bd17d028678a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &114736667169844274
@@ -104,6 +110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   running: 0
   obtainingBaseline: 0
+  once: 1
   ID: 
   testType: 
   gdlX: []
@@ -118,10 +125,13 @@ MonoBehaviour:
   HR_Buff: []
   GSR: []
   ConationLevels: []
+  PredictedConation: []
   timeStamp: []
   data: []
   naos: {fileID: 0}
   eyeData: {fileID: 0}
+  KerasBrain: {fileID: 0}
   BaseLineTime: 180
   HR_Base: 0
   loading: 0
+  time: 0
