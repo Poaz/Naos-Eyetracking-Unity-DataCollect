@@ -75,17 +75,17 @@ public class ReceiveLiveStream : MonoBehaviour
         dataThread.IsBackground = true;
         dataThread.Start();
 
-        videoThread = new Thread(new ThreadStart(SendKAMessage2));
-        videoThread.IsBackground = true;
-        videoThread.Start();
+        //videoThread = new Thread(new ThreadStart(SendKAMessage2));
+        //videoThread.IsBackground = true;
+        //videoThread.Start();
 
         receiveThread = new Thread(new ThreadStart(ReceiveData));
         receiveThread.IsBackground = true;
         receiveThread.Start();
 
-        receiveVideoThread = new Thread(new ThreadStart(ReceiveVideo));
-        receiveVideoThread.IsBackground = true;
-        receiveVideoThread.Start();
+        //receiveVideoThread = new Thread(new ThreadStart(ReceiveVideo));
+        //receiveVideoThread.IsBackground = true;
+        //receiveVideoThread.Start();
 
         print("threads created");
        // pdlBuff = new List<Tuple<double, double>>();    
@@ -109,14 +109,15 @@ public class ReceiveLiveStream : MonoBehaviour
 
         byte[] data = new byte[0];
 
-        while (true){
-            
+        while (running)
+        {
+            print("running");
             data = client.Receive(ref ep);
-           
+            
             string json = Encoding.ASCII.GetString(data);
             char [] removed = { '{', '}' , '"', ':'} ;
             json.TrimStart(removed);
-
+            print(json.ToString());
             var _json = JSON.Parse(json);
             if(json != ""){
                  
