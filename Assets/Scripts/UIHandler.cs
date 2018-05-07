@@ -12,7 +12,7 @@ public class UIHandler : MonoBehaviour
     public ExcelStore data;
     public ReceiveLiveStream rls;
     public Brain KerasBrain;
-    public GameObject red, green;
+    public GameObject redEye, greenEye, redMouse, greenMouse;
     public RestartData RD;
     public Button StartButton, calibrationContinue, ConationButton;
     public float conationValue, time;
@@ -26,6 +26,8 @@ public class UIHandler : MonoBehaviour
         RD = GetComponent<RestartData>();
         rls = GameObject.FindGameObjectWithTag("Data").GetComponent<ReceiveLiveStream>();
         data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
+        calibrationContinue.interactable = false;
+
         //slider.maxValue = (float) data.BaseLineTime;
     }
 
@@ -48,7 +50,21 @@ public class UIHandler : MonoBehaviour
             ConationButton.interactable = true;
         }
 
-        if (rls.CalibrationSuccesful && !data.obtainingBaseline)
+        if (rls.CalibrationSuccesful)
+        {
+            redEye.SetActive(false);
+            greenEye.SetActive(true);
+           
+        }
+
+        if (data.baselineObtained)
+        {
+            redMouse.SetActive(false);
+            greenMouse.SetActive(true);
+            
+        }
+
+        if (rls.CalibrationSuccesful && data.baselineObtained)
         {
             CalibrationDone();
         }
@@ -88,6 +104,10 @@ public class UIHandler : MonoBehaviour
         data = GameObject.FindGameObjectWithTag("Data").GetComponent<ExcelStore>();
         data.InitializeVariables();
         rls.PrepForTest();
+
+        //buttons
+        redMouse.SetActive(true);
+        greenMouse.SetActive(false);
     }
 
     public void StartCalibration()
@@ -151,8 +171,6 @@ public class UIHandler : MonoBehaviour
 
     public void CalibrationDone()
     {
-        red.SetActive(false);
-        green.SetActive(true);
         calibrationContinue.interactable = true;
     }
 }

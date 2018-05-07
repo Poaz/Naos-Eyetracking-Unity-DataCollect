@@ -11,7 +11,8 @@ public class ExcelStore : MonoBehaviour
     //Privates
     private static string filePath;
     private string fileName, tempIntensities, tempSampleNumber, tempDuration;
-    public bool running = false, obtainingBaseline, once = true;
+    public bool running = false, obtainingBaseline, baselineObtained, once = true;
+    
     private int prevItems = 0;
 
     //Data Variables
@@ -37,7 +38,8 @@ public class ExcelStore : MonoBehaviour
 	public void FixedUpdate()
 	{
         if(naos.GetConnection() && obtainingBaseline && HR_Buff.Count < BaseLineTime && once)
-        {          
+        {        
+            print("start mouse thing");
             StartCoroutine(CalculateBaseline());
             once = false;
         }
@@ -159,6 +161,7 @@ public class ExcelStore : MonoBehaviour
         }
         HR_Base = HR_Buff.Average(); //move decimal point 2 
         obtainingBaseline = false;
+        baselineObtained = true;
     }
 
     public void ObtainBaseline()
@@ -166,7 +169,6 @@ public class ExcelStore : MonoBehaviour
         HR_Buff = new List<double>();
         HR_Base = 0;
         obtainingBaseline = true;
-        //once = true;
     }
 
     public void PlaceLabels(float ConationLevel)
