@@ -33,6 +33,8 @@ public class UIHandler : MonoBehaviour
 
     void Update()
     {
+
+        statusText.text = rls.status_data;
         //slider.value = data.loading;
         if (data.running)
         {
@@ -54,7 +56,8 @@ public class UIHandler : MonoBehaviour
         {
             redEye.SetActive(false);
             greenEye.SetActive(true);
-           
+          //  statusText.text = "calibrated";
+
         }
 
         if (data.baselineObtained)
@@ -113,6 +116,7 @@ public class UIHandler : MonoBehaviour
     public void StartCalibration()
     {
         rls.CalibrationTest();
+        statusText.text = "calibrating eyetracker";
     }
 
     public void RecordOn()

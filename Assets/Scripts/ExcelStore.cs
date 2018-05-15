@@ -17,13 +17,13 @@ public class ExcelStore : MonoBehaviour
 
     //Data Variables
     public string ID, testType;
-    public List<double>  gdlX, gdlY, gdlZ, gdrX, gdrY, gdrZ, pdl, pdr, HR, HR_Buff, GSR, ConationLevels, PredictedConation;
+    public List<double>  gdlX, gdlY, gdlZ, gdrX, gdrY, gdrZ, pdl, pdr, HR, HR_Buff, GSR, GSR_Buff, ConationLevels, PredictedConation;
     //public double[] ConationLevels;
     public List<String> timeStamp, data;
     public DataGathering naos;
     public ReceiveLiveStream eyeData;
     public Brain KerasBrain;
-    public double BaseLineTime = 180,HR_Base;
+    public double BaseLineTime = 180,HR_Base, GSR_Base;
     public float loading, time;
     
     void Start()
@@ -160,6 +160,7 @@ public class ExcelStore : MonoBehaviour
             yield return new WaitForSeconds(0.001f);
         }
         HR_Base = HR_Buff.Average(); //move decimal point 2 
+        GSR_BAse = GSR_Buff.Average();
         obtainingBaseline = false;
         baselineObtained = true;
     }
