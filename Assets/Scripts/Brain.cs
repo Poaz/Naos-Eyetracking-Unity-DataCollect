@@ -29,9 +29,12 @@ public class Brain : MonoBehaviour
     public void Update()
     {
         time += Time.deltaTime;
-        if (store.running && time <= 2)
+        if (store.running && time >= 2)
         {
+
             prediction = Predict();
+            print(prediction);
+
             time = 0;
         }
     }
@@ -51,7 +54,7 @@ public class Brain : MonoBehaviour
     public int Predict()
     {
         // full path of python interpreter
-        pythonLocation = @"C:\Users\Dines\AppData\Local\Programs\Python\Python36\pythonw.exe";
+        pythonLocation = @"C:\Users\Dines\AppData\Local\Programs\Python\Python36\python.exe";
 
         // python app to call
         pythonScript = @"D:\Projects\NaosQGMouse-DataCollecting\Assets\Scripts\sum.py";
@@ -62,10 +65,13 @@ public class Brain : MonoBehaviour
         //Making sure we can read the output
         myProcessStartInfo.UseShellExecute = false;
         myProcessStartInfo.RedirectStandardOutput = true;
+        myProcessStartInfo.CreateNoWindow = true;
+        myProcessStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
 
         //Get new Tensor
-        //var Tensor = GetTensor();
         var tensor = GetTensor();
+        //var tensor = testTensor;
 
         //Startup the Python script, calling it with reference to self + all arguments for prediction.
         myProcessStartInfo.Arguments = pythonScript + " " + tensor[0] + " " + tensor[1] + " " + tensor[2] + " " +
@@ -76,15 +82,23 @@ public class Brain : MonoBehaviour
 
         //Assign the arguments to the process.
         Process myProcess = new Process();
-        myProcess.StartInfo = myProcessStartInfo;
+
+        try
+        {
+            myProcess.StartInfo = myProcessStartInfo;
+        }
+        catch
+        {
+            UnityEngine.Debug.Log("Error Calling Python Scrpt");
+        }
 
         /*
         UnityEngine.Debug.Log("Calling Python script with arguments:" + " " + tensor[0] + " " + tensor[1] + " " +
                               tensor[2] + " " + tensor[3]
                               + " " + tensor[4] + " " + tensor[5] + " " + tensor[6] + " " + tensor[7] + " " + tensor[8]
                               + " " + tensor[9]);
-
-        */ 
+        */
+         
 
         //Start the process
         myProcess.Start();
@@ -95,7 +109,7 @@ public class Brain : MonoBehaviour
         string myString = myStreamReader.ReadLine();
 
         //string myString = myStreamReader.ReadToEnd();
-
+  
         //Wait for the exit signal, then close.
         myProcess.WaitForExit();
         myProcess.Close();
